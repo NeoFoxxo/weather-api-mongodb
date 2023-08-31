@@ -1,0 +1,17 @@
+{
+  "name": "weather-api-mongodb",
+  "version": "0.0.1",
+  "description": "Rest API to interact with Weather data stored in MongoDB",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
+  }
+}
