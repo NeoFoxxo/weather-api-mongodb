@@ -142,5 +142,35 @@ router.get("/max-temperature", async (req, res) => {
   }
 });
 
+// route to update the precipitation value of a specific document
+router.post("/:entryID/precipitation", async (req, res) => {
+
+  const entryID = req.params.entryID;
+  const newPrecipitation = req.body.precipitation;
+
+  try {
+    const weatherStation = await weatherData.findByIdAndUpdate(entryID, { precipitation: newPrecipitation })
+    
+    console.log(weatherStation);
+
+    // if no user is found with that id give an error
+    if (weatherStation === null) {
+      return res.status(404).json({ message: `Weather station entry with ID: '${entryID}' was not found` });
+    }
+    
+    res.status(200).json({ message: `Precipiatation of the ${weatherStation.deviceName} entry was successfully updated to ${req.body.precipitation}` });
+  } 
+  catch (error) {
+
+    // if the user gives an incorrectly formatted user id give a specific error
+    if (error.name === 'CastError') {
+      return res.status(500).json({ message: `The entry ID provided is not valid` });
+    }
+
+    console.log(error.message);
+    res.status(500).json({ messsage: error.message })
+  }
+});
+
 const weatherStationsRoute = router;
 export default weatherStationsRoute;

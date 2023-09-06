@@ -1,7 +1,8 @@
-import 'dotenv/config';
+import "dotenv/config";
 import express from "express";
 import db from "./utils/database.js";
-import weatherStationsRoute from './routes/weatherStations.js';
+import weatherStationsRoute from "./routes/weatherStations.js";
+import usersRoute from "./routes/users.js";
 
 const app = express();
 
@@ -9,6 +10,8 @@ const app = express();
 app.use(express.json());
 
 app.use('/weather-stations', weatherStationsRoute);
+
+app.use('/users', usersRoute);
 
 app.get('/', (req, res) => {
     res.send('its working....');

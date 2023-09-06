@@ -61,7 +61,7 @@ const weatherDataSchema = new Schema({
     required: [true, "wind direction is required"]
   },
 })
-
+                                                                    // collection name
 const weatherData = mongoose.model("weatherData", weatherDataSchema, "weatherData");
 
 export default weatherData;
