@@ -55,6 +55,8 @@ router.get("/:deviceName/max-precipitation", async (req, res) => {
       { $group: { _id: '$deviceName', maxPrecipitation: { $max: '$precipitation' }, time: { $last: '$time' } } }
     ]);
 
+    console.log(result)
+    
     if (result.length === 0) {
       return res.status(404).json({ message: `No data found for '${deviceName}' in the last 5 months` });
     }
@@ -83,8 +85,6 @@ router.get("/:deviceName/readings/:date", async (req, res) => {
     const result = await weatherData.aggregate([
       { $match: { deviceName, time: { $eq: date } } }
     ]);
-
-    console.log(result)
 
     if (result.length === 0) {
       return res.status(404).json({ message: `No data found for '${deviceName}' at ${date}` });
@@ -143,7 +143,7 @@ router.get("/max-temperature", async (req, res) => {
 });
 
 // route to update the precipitation value of a specific document
-router.post("/:entryID/precipitation", async (req, res) => {
+router.put("/:entryID/precipitation", async (req, res) => {
 
   const entryID = req.params.entryID;
   const newPrecipitation = req.body.precipitation;

@@ -11,7 +11,7 @@ router.post("/", async (req, res) => {
     // hash password as usual
     const hashedPassword = await bcrypt.hash(req.body.password, 8);
 
-    const insertedUser = await User.create({
+    await User.create({
       username: req.body.username,
       password: hashedPassword,
       role: req.body.role
@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
 });
 
 // route to delete a user
-router.post("/delete/:id", async (req, res) => {  
+router.delete("/delete/:id", async (req, res) => {  
 
   const userID = req.params.id;
 
@@ -53,7 +53,7 @@ router.post("/delete/:id", async (req, res) => {
 });
 
 // route to change the role of all users in a specific date range
-router.post("/roles", async (req, res) => {  
+router.put("/roles", async (req, res) => {  
 
   try { 
     const rawStartDate = req.body.startDate;
