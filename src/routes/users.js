@@ -88,5 +88,21 @@ router.put("/roles", async (req, res) => {
   }
 });
 
+// route to retrieve all admin users
+router.get("/admin", async (req, res) => {  
+
+  try { 
+    // retrieve all admin users from the database
+    const adminUsers = await User.find({ role: "admin" });
+    console
+    // return the admin users as a JSON response
+    res.status(200).json(adminUsers);
+  }  
+  catch (error) {
+    console.log(error.message);
+    res.status(500).json({ messsage: error.message })
+  }
+});
+
 const usersRoute = router;
 export default usersRoute;

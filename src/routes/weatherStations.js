@@ -64,7 +64,7 @@ router.get("/:deviceName/max-precipitation", async (req, res) => {
     // get the max precipiatation and the time from the first result
     const { maxPrecipitation, time } = result[0];
     
-    res.json({ deviceName, maxPrecipitation, time });
+    res.status(200).json({ deviceName, maxPrecipitation, time });
   }  
   catch (error) {
     console.log(error.message);
@@ -93,7 +93,7 @@ router.get("/:deviceName/readings/:date", async (req, res) => {
     // get the max precipiatation and the time from the first result
     const { temperature, atmosphericPressure, solarRadiation, precipitation } = result[0];
 
-    res.json({ temperature, atmosphericPressure, solarRadiation, precipitation });
+    res.status(200).json({ temperature, atmosphericPressure, solarRadiation, precipitation });
   }  
   catch (error) {
     console.log(error.message);
@@ -134,7 +134,7 @@ router.get("/max-temperature", async (req, res) => {
     // get the max precipiatation and the time from the first result
     const { deviceName, maxTemperature } = result[0];
 
-    res.json({ deviceName, maxTemperature });
+    res.status(200).json({ deviceName, maxTemperature });
   }  
   catch (error) {
     console.log(error.message);
