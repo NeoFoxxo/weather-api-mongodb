@@ -10,6 +10,12 @@ router.post("/", async (req, res) => {
     res.status(200).json({ message: `Weather station ${req.body.deviceName} added successfully` });
   } 
   catch (error) {
+
+    // if the mongoose validation fails throw a 400 error
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+
     console.log(error.message);
     res.status(500).json({ messsage: error.message })
   }
@@ -29,8 +35,6 @@ router.post("/:deviceName", async (req, res) => {
     }
 
     const insertedData = await weatherData.create(req.body);
-
-    console.log(insertedData)
 
     res.status(200).json({ message: `${req.body.length} ${deviceName} sensor readings added successfully` });
   } 
@@ -54,8 +58,6 @@ router.get("/:deviceName/max-precipitation", async (req, res) => {
       { $match: { deviceName, time: { $gte: fiveMonthsAgo } } },
       { $group: { _id: '$deviceName', maxPrecipitation: { $max: '$precipitation' }, time: { $last: '$time' } } }
     ]);
-
-    console.log(result)
     
     if (result.length === 0) {
       return res.status(404).json({ message: `No data found for '${deviceName}' in the last 5 months` });
@@ -142,6 +144,43 @@ router.get("/max-temperature", async (req, res) => {
   }
 });
 
+// route to delete multiple readings from a device in a specific date range
+router.delete("/:deviceName/readings", async (req, res) => {
+  try {
+
+    const deviceName = req.params.deviceName;
+
+    // get start and end dates from the query params
+    const rawStartDate = req.query.startDate;
+    const rawEndDate = req.query.endDate;
+
+    // convert dates
+    const startDate = new Date(rawStartDate)
+    const endDate = new Date(rawEndDate);
+
+    // get the id's of all documents in the date range
+    const readings = await weatherData.aggregate([
+      { $match: { deviceName: deviceName, time: { $gte: startDate, $lt: endDate } } },
+      { $project: { _id: 1 } }
+    ]);
+
+    if (readings.length === 0) {
+      return res.status(404).json({ message: `No data found in the provided date range` });
+    }
+
+    // map through all the ids in the first query and delete the documents
+    const result = await weatherData.deleteMany(
+      { _id: { $in: readings.map(reading => reading._id) } }
+    );
+
+    res.status(200).json({ message: `${result.deletedCount} ${deviceName} readings deleted` });
+  }  
+  catch (error) {
+    console.log(error.message);
+    res.status(500).json({ messsage: error.message })
+  }
+});
+
 // route to update the precipitation value of a specific document
 router.put("/:entryID/precipitation", async (req, res) => {
 
@@ -164,7 +203,7 @@ router.put("/:entryID/precipitation", async (req, res) => {
 
     // if the user gives an incorrectly formatted user id give a specific error
     if (error.name === 'CastError') {
-      return res.status(500).json({ message: `The entry ID provided is not valid` });
+      return res.status(400).json({ message: `The entry ID provided is not valid` });
     }
 
     console.log(error.message);

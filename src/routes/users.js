@@ -8,6 +8,10 @@ const router = express.Router();
 router.post("/", async (req, res) => {  
 
   try {
+    if (!req.body.password){
+      return res.status(400).json({ message: `Password required!` });
+    }
+    
     // hash password as usual
     const hashedPassword = await bcrypt.hash(req.body.password, 8);
 
@@ -20,6 +24,10 @@ router.post("/", async (req, res) => {
     res.status(200).json({ message: `User ${req.body.username} added successfully` });
   } 
   catch (error) {
+    // if the mongoose validation fails throw a 400 error
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
     console.log(error.message);
     res.status(500).json({ messsage: error.message })
   }
@@ -44,7 +52,7 @@ router.delete("/delete/:id", async (req, res) => {
 
     // if the user gives an incorrectly formatted user id give a specific error
     if (error.name === 'CastError') {
-      return res.status(500).json({ message: `The user ID provided is not valid` });
+      return res.status(400).json({ message: `The user ID provided is not valid` });
     }
 
     console.log(error.message);
@@ -55,18 +63,26 @@ router.delete("/delete/:id", async (req, res) => {
 // route to change the role of all users in a specific date range
 router.put("/roles", async (req, res) => {  
 
+  const validRoles = ['admin', 'teacher', 'student'];
+
   try { 
     const rawStartDate = req.body.startDate;
     const rawEndDate = req.body.endDate;
     const newRole = req.body.role;
 
+    // check if the user has given a valid role and throw a 400 if they haven't
+    if (!validRoles.includes(newRole)) {
+      return res.status(400).json({ message: "Invalid Role! Role must be admin, teacher, or student" }); 
+    }
+
     // convert dates
     const startDate = new Date(rawStartDate)
     const endDate = new Date(rawEndDate);
 
-    // query to get all accounts in the date range
+    // query to the ids of the accounts in the date range
     const accounts = await User.aggregate([
       { $match: { createdAt: { $gte: startDate, $lt: endDate } } },
+      { $project: { _id: 1 } }
     ]);
 
     // throw a 404 if no accounts are found
@@ -94,7 +110,12 @@ router.get("/admin", async (req, res) => {
   try { 
     // retrieve all admin users from the database
     const adminUsers = await User.find({ role: "admin" });
-    console
+
+    // throw a 404 if no admin accounts are found
+    if (adminUsers.length === 0) {
+      return res.status(404).json({ message: `No admin accounts were found` });
+    }
+
     // return the admin users as a JSON response
     res.status(200).json(adminUsers);
   }  
