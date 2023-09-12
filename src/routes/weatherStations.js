@@ -197,7 +197,7 @@ router.put("/:entryID/precipitation", async (req, res) => {
       return res.status(404).json({ message: `Weather station entry with ID: '${entryID}' was not found` });
     }
     
-    res.status(200).json({ message: `Precipiatation of the ${weatherStation.deviceName} entry was successfully updated to ${req.body.precipitation}` });
+    res.status(200).json({ message: `Precipiatation of the ${weatherStation.deviceName} entry was successfully updated to ${newPrecipitation}` });
   } 
   catch (error) {
 
