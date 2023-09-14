@@ -28,7 +28,10 @@ router.post("/", async (req, res) => {
     if (error.name === 'ValidationError') {
       return res.status(400).json({ message: error.message });
     }
-    console.log(error.message);
+    // this error code is thrown when a username is not unique
+    if (error.code === 11000) {
+      return res.status(400).json({ message: `username '${req.body.username}' is already taken` });
+    }
     res.status(500).json({ messsage: error.message })
   }
 });

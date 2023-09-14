@@ -4,9 +4,14 @@ const { Schema } = mongoose;
 const validRoles = ['admin', 'teacher', 'student'];
 
 const userDataSchema = new Schema({
+
   username: {
     type: String,
-    required: [true, "username is required"]
+    required: [true, "username is required"],
+    // username will be converted to lowercase once submitted
+    lowercase: true,
+    // username must be unique
+    unique: true
   },
   password: {
     type: String,
