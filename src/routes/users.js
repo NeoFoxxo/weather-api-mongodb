@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
       }
       // this error code is thrown when a username is not unique
       if (error.code === 11000) {
-        return res.status(400).json({ message: `username '${req.body.username}' is already taken` });
+        return res.status(409).json({ message: `username '${req.body.username}' is already taken` });
       }
       res.status(500).json({ messsage: error.message })
     }

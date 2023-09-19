@@ -43,7 +43,7 @@ app.use((req, res, next) => {
           req.user = user;
           next();
         }
-      })
+      });
     }
     else {
       next();
@@ -55,10 +55,9 @@ app.use((req, res, next) => {
   }
 });
 
-app.use('/weather-stations', weatherStationsRoute);
-
+// setup all the routes
+app.use('/weather-stations', weatherStationsRoute)
 app.use('/users', usersRoute);
-
 app.use('/auth', authRoute);
 
 app.get('/', (req, res) => {

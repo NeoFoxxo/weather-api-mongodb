@@ -210,6 +210,10 @@ router.patch("/:entryID/precipitation", async (req, res) => {
     const entryID = req.params.entryID;
     const newPrecipitation = req.body.precipitation;
 
+    if (!newPrecipitation) {
+      return res.status(400).json({ message: `Precipitation value is required` });
+    }
+
     try {
       const weatherStation = await weatherData.findByIdAndUpdate(entryID, { precipitation: newPrecipitation })
       
