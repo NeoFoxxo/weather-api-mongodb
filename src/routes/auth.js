@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     if (existingUser) {
 
       // compare the login password with the hashed customer password
-      bcrypt.compare(password, existingUser.password, (err, match) => {
+      bcrypt.compare(password, existingUser.password, async (err, match) => {
 
         // if the password is correct sign a JWT token
         if (match) {
@@ -32,8 +32,11 @@ router.post('/login', async (req, res) => {
           // store only the username and role in the JWT
           const user = { username: existingUser.username, role: existingUser.role }
 
-          // create JWT and make it expire in 5 minutes
-          const accessToken = sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5m' });
+          // create JWT and make it expire after 1 hour
+          const accessToken = sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+          // update the lastSession value to the current date since the user successfully logged in
+          await User.updateOne({ _id: existingUser._id }, { lastSession: Date.now() })
 
           res.status(200).json({ message: `${username} successfully logged in`, accessToken: accessToken });
         } 

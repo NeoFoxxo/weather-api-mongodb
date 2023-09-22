@@ -76,6 +76,58 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
+// endpoint to delete multiple students in a date range of when the last logged in
+router.delete("/delete-students", async (req, res) => {  
+
+  // check if the user is authorised to delete a user
+  if (req.user.role === "admin") {
+
+    try { 
+      const rawStartDate = req.query.startDate;
+      const rawEndDate = req.query.endDate;
+
+      // do some validation
+      if (!rawStartDate) {
+        return res.status(400).json({ message: `startDate is required` });
+      }
+      
+      if (!rawEndDate) {
+        return res.status(400).json({ message: `endDate is required` });
+      }
+
+      // convert dates
+      const startDate = new Date(rawStartDate)
+      const endDate = new Date(rawEndDate);
+
+      // query get only the ids of the student accounts in the date range
+      const students = await User.aggregate([
+        { $match: { lastSession: { $gte: startDate, $lt: endDate }, role: "student" } },
+        { $project: { _id: 1 } }
+      ]);
+
+      // throw a 404 if no accounts are found
+      if (students.length === 0) {
+        return res.status(404).json({ message: `No student accounts active in the provided date range` });
+      }
+
+      // loop over the students id's found in the first query and delete them
+      const result = await User.deleteMany(
+        { _id: { $in: students.map(student => student._id) } }
+      );
+
+      res.status(200).json({ message: `${result.deletedCount} student accounts deleted successfully` });
+    }  
+    catch (error) {
+      console.log(error.message);
+      res.status(500).json({ messsage: error.message })
+    }
+  }
+  else {
+    return res.status(401).json({ message: `You are not authorised to access this content` });
+  }
+});
+
+
 // route to change the role of all users in a specific date range
 router.put("/roles", async (req, res) => {  
 
@@ -89,6 +141,19 @@ router.put("/roles", async (req, res) => {
       const rawEndDate = req.body.endDate;
       const newRole = req.body.role;
 
+      // do some validation
+      if (!rawStartDate) {
+        return res.status(400).json({ message: `startDate is required` });
+      }
+      
+      if (!rawEndDate) {
+        return res.status(400).json({ message: `endDate is required` });
+      }
+      
+      if (!newRole) {
+        return res.status(400).json({ message: `Role is required` });
+      }
+
       // check if the user has given a valid role and throw a 400 if they haven't
       if (!validRoles.includes(newRole)) {
         return res.status(400).json({ message: "Invalid Role! Role must be admin, teacher, or student" }); 
@@ -98,7 +163,7 @@ router.put("/roles", async (req, res) => {
       const startDate = new Date(rawStartDate)
       const endDate = new Date(rawEndDate);
 
-      // query to the ids of the accounts in the date range
+      // query to get the ids of the accounts in the date range
       const accounts = await User.aggregate([
         { $match: { createdAt: { $gte: startDate, $lt: endDate } } },
         { $project: { _id: 1 } }
@@ -130,11 +195,31 @@ router.put("/roles", async (req, res) => {
 // route to retrieve all admin users
 router.get("/admin", async (req, res) => {  
 
+  const limitRaw = req.query.limit;
+
+  // check if the limit is provided and if it is NOT an integer then throw a 400 error
+  if (limitRaw && !Number.isInteger(parseInt(limitRaw))) {
+    return res.status(400).json({ message: "Limit must be an integer" }); 
+  } 
+
+  // convert the limit to an integer
+  const limit = parseInt(limitRaw);
+
   // check if the user is authorised to view all admin accounts
   if (req.user.role === "admin") {
     try { 
-      // retrieve all admin users from the database
-      const adminUsers = await User.find({ role: "admin" });
+      
+      let adminUsers;
+
+      // if the user has provided a limit, use it.
+      if (limit) {
+        // retrieve all admin users from the database
+        adminUsers = await User.find({ role: "admin" }).limit(limit);
+      }
+      else {
+        // retrieve all admin users from the database
+        adminUsers = await User.find({ role: "admin" });
+      }
 
       // throw a 404 if no admin accounts are found
       if (adminUsers.length === 0) {
