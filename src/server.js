@@ -6,6 +6,9 @@ import usersRoute from "./routes/users.js";
 import authRoute from "./routes/auth.js";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import User from "./models/userDataModel.js";
+import https from "https";
+import fs from "fs";
 
 const app = express();
 
@@ -35,13 +38,26 @@ app.use((req, res, next) => {
       }
 
       // verify if the token is valid and let the user past
-      verify(token, process.env.ACCESS_TOKEN_SECRET, (error, user) => {
+      verify(token, process.env.ACCESS_TOKEN_SECRET, async (error, user) => {
+
+        let existingUser;
+        
+        // check if the account stored in the JWT actually still exists
+        if (user) {
+          existingUser = await User.findOne({ username: user.username })
+        }
+
         if (error) {
           return res.status(403).json({ message: `The provided authorization token has expired or is invalid` });
         }
-        else {
+        // if the account does exist let the user through
+        else if (existingUser) {
           req.user = user;
           next();
+        }
+        // else the account must not exist and the JWT was for a deleted account
+        else {
+          return res.status(403).json({ message: `The provided authorization token has expired or is invalid` });
         }
       });
     }
@@ -64,6 +80,17 @@ app.get('/', (req, res) => {
   res.send('its working....');
 })
 
-app.listen(5000, () => {
-    console.log("Server running on port 5000");
-})
+// get the certificates and key for using https
+const server = https.createServer({
+    key: fs.readFileSync("./https/private.key"),
+    cert: fs.readFileSync("./https/certificate.crt")
+}, app);
+
+// start the server with https and console log
+server.listen(443, () => {
+    console.log("server listening on port 443 https://localhost");
+});
+
+// app.listen(5000, () => {
+//     console.log("Server running on port 5000");
+// })
