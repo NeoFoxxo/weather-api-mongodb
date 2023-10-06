@@ -76,21 +76,19 @@ app.use('/weather-stations', weatherStationsRoute)
 app.use('/users', usersRoute);
 app.use('/auth', authRoute);
 
-app.get('/', (req, res) => {
-  res.send('its working....');
+// start server
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
 })
 
-// get the certificates and key for using https
-const server = https.createServer({
-    key: fs.readFileSync("./https/private.key"),
-    cert: fs.readFileSync("./https/certificate.crt")
-}, app);
+// uncomment if using https
 
-// start the server with https and console log
-server.listen(443, () => {
-    console.log("server listening on port 443 https://localhost");
-});
+// const server = https.createServer({
+//     key: fs.readFileSync("./https/private.key"),
+//     cert: fs.readFileSync("./https/certificate.crt")
+// }, app);
 
-// app.listen(5000, () => {
-//     console.log("Server running on port 5000");
-// })
+// start the server with https
+// server.listen(443, () => {
+//     console.log("server listening on port 443 https://localhost");
+// });
